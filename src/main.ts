@@ -5,12 +5,31 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // Set secure HTTP headers to mitigate common web risks (XSS, clickjacking, MIME sniffing)
-  app.use(helmet({
-    frameguard: { action: 'deny' },
-    referrerPolicy: { policy: 'no-referrer' },
-    contentSecurityPolicy: false,
-  }));
+  // Security headers: CSP, X-Frame-Options, HSTS, X-Content-Type-Options
+  const frontendOrigin = (process.env.FRONTEND_ORIGIN as string) || '';
+  app.use(helmet());
+  app.use(
+    helmet.contentSecurityPolicy({
+      useDefaults: true,
+      directives: {
+        "default-src": ["'self'"],
+        "base-uri": ["'self'"],
+        "block-all-mixed-content": [],
+        "font-src": ["'self'", 'https:', 'data:'],
+        "frame-ancestors": ["'none'"],
+        "img-src": ["'self'", 'https:', 'data:'],
+        "object-src": ["'none'"],
+        "script-src": ["'self'"],
+        "script-src-attr": ["'none'"],
+        "style-src": ["'self'", 'https:', "'unsafe-inline'"],
+        "connect-src": ["'self'", frontendOrigin || "'self'"],
+      },
+    })
+  );
+  app.use(helmet.frameguard({ action: 'deny' }));
+  app.use(helmet.hsts({ maxAge: 15552000, includeSubDomains: true, preload: true }));
+  app.use(helmet.noSniff());
+  app.use(helmet.referrerPolicy({ policy: 'no-referrer' }));
 
   // Only allow requests from known frontend origins (adjust via env FRONTEND_ORIGIN)
   app.enableCors({
