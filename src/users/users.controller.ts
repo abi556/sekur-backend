@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { CreateUserDto, UserRole } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -58,6 +59,7 @@ export class UsersController {
   }
 
   // POST /users - create a new user (Public for regular users, Admin for admin users)
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post()
   async createUser(
     @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) createUserDto: CreateUserDto
