@@ -13,30 +13,18 @@ async function bootstrap() {
   }));
 
   // Only allow requests from known frontend origins (adjust via env FRONTEND_ORIGIN)
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3001',
-  'http://localhost:3000',
-  process.env.FRONTEND_ORIGIN, //  deployed frontend URL
-].filter(Boolean) as string[];
+  app.enableCors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.FRONTEND_ORIGIN as string,
+    ].filter(Boolean) as string[],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  });
 
-app.enableCors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, Postman, etc.)
-    if (!origin) return callback(null, true);
-    
-    // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      // In production, REJECT unknown origins (more secure!)
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-});
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
