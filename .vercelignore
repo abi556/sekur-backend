@@ -9,4 +9,3 @@ coverage
 test
 *.test.ts
 *.spec.ts
-src
