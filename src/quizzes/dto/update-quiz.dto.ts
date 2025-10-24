@@ -1,4 +1,17 @@
-import { IsOptional, IsInt, IsString, IsArray, IsNotEmpty, MinLength, MaxLength, ValidateNested, ArrayMinSize, ArrayMaxSize, IsEnum, ValidateIf } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  IsString,
+  IsArray,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  ValidateNested,
+  ArrayMinSize,
+  ArrayMaxSize,
+  IsEnum,
+  ValidateIf,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { QuestionType } from './create-quiz.dto';
 
@@ -40,8 +53,12 @@ export class UpdateQuizQuestionDto {
   @ValidateIf((o) => o.type && o.type === QuestionType.MULTIPLE_CHOICE)
   @ValidateNested({ each: true })
   @Type(() => UpdateQuizAnswerDto)
-  @ArrayMinSize(2, { message: 'Multiple choice questions must have at least 2 answers' })
-  @ArrayMaxSize(6, { message: 'Multiple choice questions can have at most 6 answers' })
+  @ArrayMinSize(2, {
+    message: 'Multiple choice questions must have at least 2 answers',
+  })
+  @ArrayMaxSize(6, {
+    message: 'Multiple choice questions can have at most 6 answers',
+  })
   answers?: UpdateQuizAnswerDto[];
 }
 

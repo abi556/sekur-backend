@@ -1,4 +1,17 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, ParseIntPipe, ValidationPipe, UsePipes, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  ParseIntPipe,
+  ValidationPipe,
+  UsePipes,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -8,11 +21,13 @@ import { AdminGuard } from '../auth/admin.guard';
 
 @Controller('quizzes')
 @UseGuards(JwtAuthGuard)
-@UsePipes(new ValidationPipe({ 
-  whitelist: true, 
-  forbidNonWhitelisted: true,
-  transform: true 
-}))
+@UsePipes(
+  new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    transform: true,
+  }),
+)
 export class QuizzesController {
   constructor(private quizzesService: QuizzesService) {}
 
@@ -28,9 +43,9 @@ export class QuizzesController {
   @UseGuards(AdminGuard)
   async create(@Body() createQuizDto: CreateQuizDto) {
     return this.quizzesService.create(
-      createQuizDto.lessonId, 
-      createQuizDto.title, 
-      createQuizDto.questions
+      createQuizDto.lessonId,
+      createQuizDto.title,
+      createQuizDto.questions,
     );
   }
 
@@ -43,7 +58,10 @@ export class QuizzesController {
   // PATCH /quizzes/:id - update a quiz (Admin only)
   @Patch(':id')
   @UseGuards(AdminGuard)
-  async update(@Param('id', ParseIntPipe) id: number, @Body() updateQuizDto: UpdateQuizDto) {
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateQuizDto: UpdateQuizDto,
+  ) {
     return this.quizzesService.update(id, updateQuizDto);
   }
 
@@ -59,7 +77,7 @@ export class QuizzesController {
   async submitQuiz(
     @Param('id', ParseIntPipe) id: number,
     @Body() submitQuizDto: SubmitQuizDto,
-    @Request() req
+    @Request() req,
   ) {
     const userId = req.user.userId;
     return this.quizzesService.submitQuiz(id, submitQuizDto, userId);

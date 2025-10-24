@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuizDto, QuestionType } from './dto/create-quiz.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
@@ -81,14 +86,14 @@ export class QuizzesService {
       const existing = await this.prisma.quiz.findFirst({
         where: { lessonId: data.lessonId, NOT: { id } },
         select: { id: true },
-      })
+      });
       if (existing) {
-        throw new ConflictException('A quiz is already set up for this lesson')
+        throw new ConflictException('A quiz is already set up for this lesson');
       }
     }
 
     // For simplicity, delete old questions/answers and recreate
-    await this.prisma.quizQuestion.deleteMany({ where: { quizId: id } })
+    await this.prisma.quizQuestion.deleteMany({ where: { quizId: id } });
 
     return this.prisma.quiz.update({
       where: { id },
@@ -112,7 +117,7 @@ export class QuizzesService {
         },
       },
       include: { questions: { include: { answers: true } } },
-    })
+    });
   }
 
   // Delete a quiz
@@ -123,37 +128,44 @@ export class QuizzesService {
         where: {
           attempt: { quizId: id },
         },
-      })
+      });
 
       // Delete answers for questions in this quiz
       await tx.quizAnswer.deleteMany({
         where: {
           question: { quizId: id },
         },
-      })
+      });
 
       // Delete questions for this quiz
-      await tx.quizQuestion.deleteMany({ where: { quizId: id } })
+      await tx.quizQuestion.deleteMany({ where: { quizId: id } });
 
       // Delete attempts for this quiz
-      await tx.quizAttempt.deleteMany({ where: { quizId: id } })
+      await tx.quizAttempt.deleteMany({ where: { quizId: id } });
 
       // Finally delete the quiz
-      await tx.quiz.delete({ where: { id } })
-    })
+      await tx.quiz.delete({ where: { id } });
+    });
 
-    return { id }
+    return { id };
   }
 
   // Submit quiz answers and evaluate
-  async submitQuiz(quizId: number, submitQuizDto: SubmitQuizDto, userId: number) {
+  async submitQuiz(
+    quizId: number,
+    submitQuizDto: SubmitQuizDto,
+    userId: number,
+  ) {
     const quiz = await this.findOne(quizId);
     let totalScore = 0;
-    const maxScore = quiz.questions.reduce((sum, q) => sum + (q.points || 1), 0);
+    const maxScore = quiz.questions.reduce(
+      (sum, q) => sum + (q.points || 1),
+      0,
+    );
     const results: any[] = [];
 
     for (const answer of submitQuizDto.answers) {
-      const question = quiz.questions.find(q => q.id === answer.questionId);
+      const question = quiz.questions.find((q) => q.id === answer.questionId);
       if (!question) continue;
 
       let isCorrect = false;
@@ -162,21 +174,29 @@ export class QuizzesService {
       // Evaluate based on question type
       switch (question.type) {
         case QuestionType.MULTIPLE_CHOICE:
-          const correctAnswer = question.answers.find(a => a.isCorrect);
-          isCorrect = correctAnswer ? answer.userAnswer === correctAnswer.answer : false;
+          const correctAnswer = question.answers.find((a) => a.isCorrect);
+          isCorrect = correctAnswer
+            ? answer.userAnswer === correctAnswer.answer
+            : false;
           break;
-        
+
         case QuestionType.TRUE_FALSE:
-          isCorrect = answer.userAnswer.toLowerCase() === (question.correctAnswer?.toLowerCase() || '');
+          isCorrect =
+            answer.userAnswer.toLowerCase() ===
+            (question.correctAnswer?.toLowerCase() || '');
           break;
-        
+
         case QuestionType.FILL_IN_BLANK:
-          isCorrect = answer.userAnswer.toLowerCase().trim() === (question.correctAnswer?.toLowerCase().trim() || '');
+          isCorrect =
+            answer.userAnswer.toLowerCase().trim() ===
+            (question.correctAnswer?.toLowerCase().trim() || '');
           break;
-        
+
         case QuestionType.SHORT_ANSWER:
           // For short answer, we could implement fuzzy matching or exact match
-          isCorrect = answer.userAnswer.toLowerCase().trim() === (question.correctAnswer?.toLowerCase().trim() || '');
+          isCorrect =
+            answer.userAnswer.toLowerCase().trim() ===
+            (question.correctAnswer?.toLowerCase().trim() || '');
           break;
       }
 
@@ -196,7 +216,7 @@ export class QuizzesService {
 
     // Calculate percentage first
     const percentage = Math.round((totalScore / maxScore) * 100);
-    
+
     // Create quiz attempt record
     const attempt = await this.prisma.quizAttempt.create({
       data: {
@@ -217,7 +237,7 @@ export class QuizzesService {
       },
       include: { answers: true },
     });
-    
+
     // If user scored 75% or higher, automatically mark the lesson as completed
     if (percentage >= 75) {
       try {
@@ -226,7 +246,7 @@ export class QuizzesService {
           where: { id: quizId },
           select: { lessonId: true },
         });
-        
+
         if (quizWithLesson) {
           // Mark lesson as completed in user progress
           await this.prisma.userProgress.upsert({
@@ -245,8 +265,10 @@ export class QuizzesService {
               completed: true,
             },
           });
-          
-          console.log(`Lesson ${quizWithLesson.lessonId} automatically marked as completed for user ${userId} (Quiz score: ${percentage}%)`);
+
+          console.log(
+            `Lesson ${quizWithLesson.lessonId} automatically marked as completed for user ${userId} (Quiz score: ${percentage}%)`,
+          );
         }
       } catch (error) {
         console.error('Error updating lesson progress:', error);

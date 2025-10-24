@@ -9,5 +9,3 @@ import { LessonsModule } from '../lessons/lessons.module';
   providers: [AiService],
 })
 export class AiModule {}
-
-

@@ -14,12 +14,15 @@ import { AiModule } from './ai/ai.module';
 @Module({
   imports: [
     // Global rate limiting: 100 requests per 60s per client
-    ThrottlerModule.forRoot([
-      {
-        ttl: 60_000,
-        limit: 100,
-      },
-    ]),
+    // Use forRootAsync for better serverless compatibility
+    ThrottlerModule.forRootAsync({
+      useFactory: () => [
+        {
+          ttl: 60_000,
+          limit: 100,
+        },
+      ],
+    }),
     UsersModule,
     PrismaModule,
     AuthModule,
