@@ -1,10 +1,18 @@
 import 'dotenv/config';
 import { NestFactory } from '@nestjs/core';
+import { INestApplication } from '@nestjs/common';
 import { AppModule } from './app.module';
 import helmet from 'helmet';
 
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+let app: INestApplication | undefined;
+
+async function createApp(): Promise<INestApplication> {
+  if (app) {
+    return app;
+  }
+
+  app = await NestFactory.create(AppModule);
+
   // Set secure HTTP headers to mitigate common web risks (XSS, clickjacking, MIME sniffing)
   app.use(
     helmet({
@@ -27,6 +35,19 @@ async function bootstrap() {
     credentials: true,
   });
 
-  await app.listen(process.env.PORT ?? 3000);
+  await app.init();
+  return app;
 }
-void bootstrap();
+
+// Vercel serverless handler
+export default async function handler(req: any, res: any): Promise<any> {
+  const nestApp = await createApp();
+  return nestApp.getHttpAdapter().getInstance()(req, res);
+}
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  void createApp().then((nestApp) => {
+    nestApp.listen(process.env.PORT ?? 3000);
+  });
+}
