@@ -1,4 +1,11 @@
-import { Controller, Get, Post, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { ProgressService } from './progress.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -55,15 +62,21 @@ export class ProgressController {
   // Mark lesson as completed
   @Post(':lessonId/complete')
   @UseGuards(JwtAuthGuard)
-  async markLessonCompleted(@Request() req, @Param('lessonId') lessonId: string) {
+  async markLessonCompleted(
+    @Request() req,
+    @Param('lessonId') lessonId: string,
+  ) {
     const userId = req.user.userId;
     console.log('User ID from JWT:', userId, 'Type:', typeof userId);
     console.log('Lesson ID:', lessonId, 'Type:', typeof lessonId);
-    
+
     if (!userId || isNaN(userId)) {
       throw new Error('Invalid user ID from JWT token');
     }
-    
-    return this.progressService.markLessonCompleted(Number(userId), parseInt(lessonId));
+
+    return this.progressService.markLessonCompleted(
+      Number(userId),
+      parseInt(lessonId),
+    );
   }
 }

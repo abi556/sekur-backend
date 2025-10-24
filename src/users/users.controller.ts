@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  ParseIntPipe,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { UsersService } from './users.service';
 import { CreateUserDto, UserRole } from './dto/create-user.dto';
@@ -25,8 +36,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch('profile')
   async updateOwnProfile(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) updateUserDto: UpdateUserDto,
-    @Request() req
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    updateUserDto: UpdateUserDto,
+    @Request() req,
   ) {
     const userId = req.user.userId;
     return this.usersService.updateUser(userId, updateUserDto);
@@ -36,8 +48,9 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @Patch('profile/password')
   async changeOwnPassword(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) body: ChangePasswordDto,
-    @Request() req
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    body: ChangePasswordDto,
+    @Request() req,
   ) {
     const userId = req.user.userId;
     return this.usersService.changeOwnPassword(userId, body);
@@ -62,19 +75,20 @@ export class UsersController {
   @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post()
   async createUser(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) createUserDto: CreateUserDto
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    createUserDto: CreateUserDto,
   ) {
     // Allow public registration for regular users
     // But require admin authentication for admin users
     if (createUserDto.role === UserRole.ADMIN) {
       throw new Error('Admin users can only be created by existing admins');
     }
-    
+
     // Set default role to USER if not specified
     if (!createUserDto.role) {
       createUserDto.role = UserRole.USER;
     }
-    
+
     return this.usersService.createUser(createUserDto);
   }
 
@@ -82,7 +96,8 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Post('admin')
   async createAdminUser(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) createUserDto: CreateUserDto
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    createUserDto: CreateUserDto,
   ) {
     // Ensure role is set to ADMIN for admin creation endpoint
     createUserDto.role = UserRole.ADMIN;
@@ -94,7 +109,8 @@ export class UsersController {
   @Patch(':id')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) updateUserDto: UpdateUserDto
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.updateUser(id, updateUserDto);
   }
@@ -102,9 +118,7 @@ export class UsersController {
   // DELETE /users/:id - delete a user (Admin only)
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
-  async deleteUser(
-    @Param('id', ParseIntPipe) id: number
-  ) {
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.deleteUser(id);
   }
 }

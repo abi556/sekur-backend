@@ -9,9 +9,9 @@ export class LessonsService {
 
   // Create a new lesson
   async create(createLessonDto: CreateLessonDto) {
-    return this.prisma.lesson.create({ 
+    return this.prisma.lesson.create({
       data: createLessonDto,
-      select: { id: true, title: true, content: true }
+      select: { id: true, title: true, content: true },
     });
   }
 
@@ -27,7 +27,7 @@ export class LessonsService {
       select: { id: true, title: true, content: true },
     });
     if (!lesson) throw new NotFoundException('Lesson not found');
-    
+
     // Content is now always stored directly in the database
     return { id: lesson.id, title: lesson.title, content: lesson.content };
   }
@@ -59,7 +59,9 @@ export class LessonsService {
           where: { question: { quizId: { in: quizIds } } },
         });
         // Delete questions
-        await tx.quizQuestion.deleteMany({ where: { quizId: { in: quizIds } } });
+        await tx.quizQuestion.deleteMany({
+          where: { quizId: { in: quizIds } },
+        });
         // Finally delete quizzes
         await tx.quiz.deleteMany({ where: { id: { in: quizIds } } });
       }

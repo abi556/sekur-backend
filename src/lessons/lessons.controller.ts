@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, ParseIntPipe, ValidationPipe, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  ParseIntPipe,
+  ValidationPipe,
+  UseGuards,
+} from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -10,18 +21,18 @@ import { AdminGuard } from '../auth/admin.guard';
 export class LessonsController {
   constructor(
     private lessonsService: LessonsService,
-    private quizzesService: QuizzesService // Inject QuizzesService
+    private quizzesService: QuizzesService, // Inject QuizzesService
   ) {}
 
   // POST /lessons - create a new lesson (Admin only)
   @Post()
   @UseGuards(JwtAuthGuard, AdminGuard)
   async create(
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) createLessonDto: CreateLessonDto
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    createLessonDto: CreateLessonDto,
   ) {
     return this.lessonsService.create(createLessonDto);
   }
-
 
   // GET /lessons - get all lessons
   @Get()
@@ -46,7 +57,8 @@ export class LessonsController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true })) updateLessonDto: UpdateLessonDto
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
+    updateLessonDto: UpdateLessonDto,
   ) {
     return this.lessonsService.update(id, updateLessonDto);
   }

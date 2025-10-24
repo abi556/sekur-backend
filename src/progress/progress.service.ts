@@ -67,16 +67,16 @@ export class ProgressService {
   // Mark lesson as completed
   async markLessonCompleted(userId: number, lessonId: number) {
     console.log('ProgressService - userId:', userId, 'lessonId:', lessonId);
-    
+
     // First check if the lesson exists
     const lesson = await this.prisma.lesson.findUnique({
       where: { id: lessonId },
     });
-    
+
     if (!lesson) {
       throw new Error(`Lesson with ID ${lessonId} not found`);
     }
-    
+
     return this.prisma.userProgress.upsert({
       where: {
         userId_lessonId: {
@@ -106,7 +106,7 @@ export class ProgressService {
     });
 
     const totalQuizzes = await this.prisma.quiz.count();
-    
+
     // Count unique quizzes completed (not total attempts)
     const completedQuizzes = await this.prisma.quizAttempt.groupBy({
       by: ['quizId'],
@@ -118,7 +118,7 @@ export class ProgressService {
         quizId: true,
       },
     });
-    
+
     const completedQuizzesCount = completedQuizzes.length;
 
     // Get all completed quiz attempts to calculate percentage average
@@ -137,24 +137,28 @@ export class ProgressService {
     let averageScore = 0;
     if (quizAttempts.length > 0) {
       console.log('Quiz Attempts for average calculation:', quizAttempts);
-      
+
       const totalPercentage = quizAttempts.reduce((sum, attempt) => {
         const percentage = (attempt.score / attempt.maxScore) * 100;
-        console.log(`Attempt: ${attempt.score}/${attempt.maxScore} = ${percentage}%`);
+        console.log(
+          `Attempt: ${attempt.score}/${attempt.maxScore} = ${percentage}%`,
+        );
         return sum + percentage;
       }, 0);
-      
+
       console.log('Total Percentage Sum:', totalPercentage);
       console.log('Number of Attempts:', quizAttempts.length);
-      
-      averageScore = Math.round((totalPercentage / quizAttempts.length) * 100) / 100; // Round to 2 decimal places
+
+      averageScore =
+        Math.round((totalPercentage / quizAttempts.length) * 100) / 100; // Round to 2 decimal places
       console.log('Final Average Score:', averageScore);
     }
 
     return {
       totalLessons,
       completedLessons,
-      completionRate: totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0,
+      completionRate:
+        totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0,
       totalQuizzes,
       completedQuizzes: completedQuizzesCount,
       averageScore: averageScore,
@@ -167,7 +171,7 @@ export class ProgressService {
       select: { id: true },
     });
 
-    const progressEntries = lessons.map(lesson => ({
+    const progressEntries = lessons.map((lesson) => ({
       userId,
       lessonId: lesson.id,
       completed: false,
@@ -194,7 +198,7 @@ export class ProgressService {
     const quizProgress: any[] = [];
     for (const bestAttempt of bestQuizAttempts) {
       if (bestAttempt._max.score === null) continue;
-      
+
       const attempt = await this.prisma.quizAttempt.findFirst({
         where: {
           userId,
@@ -230,7 +234,7 @@ export class ProgressService {
           maxScore: attempt.maxScore,
           percentage: Math.round((attempt.score / attempt.maxScore) * 100),
           completedAt: attempt.completedAt,
-          passed: (attempt.score / attempt.maxScore) >= 0.75,
+          passed: attempt.score / attempt.maxScore >= 0.75,
           attempts: await this.prisma.quizAttempt.count({
             where: { userId, quizId: attempt.quizId },
           }),
@@ -256,18 +260,25 @@ export class ProgressService {
         completedLessons: lessonProgress.filter((p: any) => p.completed).length,
         totalQuizzes: quizProgress.length,
         passedQuizzes: quizProgress.filter((q: any) => q.passed).length,
-        overallCompletion: this.calculateOverallCompletion(lessonProgress, quizProgress),
+        overallCompletion: this.calculateOverallCompletion(
+          lessonProgress,
+          quizProgress,
+        ),
       },
     };
   }
 
-  private calculateOverallCompletion(lessonProgress: any[], quizProgress: any[]) {
+  private calculateOverallCompletion(
+    lessonProgress: any[],
+    quizProgress: any[],
+  ) {
     const totalItems = lessonProgress.length + quizProgress.length;
     if (totalItems === 0) return 0;
-    
-    const completedItems = lessonProgress.filter((p: any) => p.completed).length + 
-                          quizProgress.filter((q: any) => q.passed).length;
-    
+
+    const completedItems =
+      lessonProgress.filter((p: any) => p.completed).length +
+      quizProgress.filter((q: any) => q.passed).length;
+
     return Math.round((completedItems / totalItems) * 100);
   }
 
@@ -280,12 +291,25 @@ export class ProgressService {
     });
 
     // Aggregate per user
-    const userTotals = new Map<number, { totalScore: number; totalMax: number; quizzes: number; lastCompletedAt: Date | null }>();
+    const userTotals = new Map<
+      number,
+      {
+        totalScore: number;
+        totalMax: number;
+        quizzes: number;
+        lastCompletedAt: Date | null;
+      }
+    >();
     for (const g of grouped) {
       const bestScore = g._max.score ?? 0;
       const maxScore = g._max.maxScore ?? 0;
       const last = g._max.completedAt ?? null;
-      const prev = userTotals.get(g.userId) || { totalScore: 0, totalMax: 0, quizzes: 0, lastCompletedAt: null };
+      const prev = userTotals.get(g.userId) || {
+        totalScore: 0,
+        totalMax: 0,
+        quizzes: 0,
+        lastCompletedAt: null,
+      };
       prev.totalScore += bestScore;
       prev.totalMax += maxScore;
       prev.quizzes += 1;
@@ -301,11 +325,12 @@ export class ProgressService {
       where: { id: { in: userIds } },
       select: { id: true, name: true },
     });
-    const idToName = new Map(users.map(u => [u.id, u.name] as const));
+    const idToName = new Map(users.map((u) => [u.id, u.name] as const));
 
     const rows = userIds.map((uid) => {
       const t = userTotals.get(uid)!;
-      const percentage = t.totalMax > 0 ? Math.round((t.totalScore / t.totalMax) * 100) : 0;
+      const percentage =
+        t.totalMax > 0 ? Math.round((t.totalScore / t.totalMax) * 100) : 0;
       return {
         userId: uid,
         name: idToName.get(uid) || `User ${uid}`,
@@ -320,8 +345,12 @@ export class ProgressService {
     rows.sort((a, b) => {
       if (b.totalScore !== a.totalScore) return b.totalScore - a.totalScore;
       // earlier lastCompletedAt ranks higher (faster achiever)
-      const at = a.lastCompletedAt ? a.lastCompletedAt.getTime() : Number.MAX_SAFE_INTEGER;
-      const bt = b.lastCompletedAt ? b.lastCompletedAt.getTime() : Number.MAX_SAFE_INTEGER;
+      const at = a.lastCompletedAt
+        ? a.lastCompletedAt.getTime()
+        : Number.MAX_SAFE_INTEGER;
+      const bt = b.lastCompletedAt
+        ? b.lastCompletedAt.getTime()
+        : Number.MAX_SAFE_INTEGER;
       return at - bt;
     });
 

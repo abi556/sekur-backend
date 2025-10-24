@@ -8,11 +8,21 @@ export class AiController {
   constructor(private readonly aiService: AiService) {}
 
   @Post('ask')
-  async ask(@Body() body: { lessonId: number; question: string; language?: 'en' | 'am' }) {
+  async ask(
+    @Body()
+    body: {
+      lessonId: number;
+      question: string;
+      language?: 'en' | 'am';
+    },
+  ) {
     const { lessonId, question, language } = body;
-    return this.aiService.ask({ lessonId, question, language: language || 'en' });
+    return this.aiService.ask({
+      lessonId,
+      question,
+      language: language || 'en',
+    });
   }
 }
-
 
 // backend setup for deployment

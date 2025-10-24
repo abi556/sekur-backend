@@ -1,11 +1,25 @@
-import { IsInt, IsString, IsArray, IsNotEmpty, MinLength, MaxLength, ValidateNested, ArrayMinSize, ArrayMaxSize, IsOptional, IsEnum, IsNumber, ValidateIf } from 'class-validator';
+import {
+  IsInt,
+  IsString,
+  IsArray,
+  IsNotEmpty,
+  MinLength,
+  MaxLength,
+  ValidateNested,
+  ArrayMinSize,
+  ArrayMaxSize,
+  IsOptional,
+  IsEnum,
+  IsNumber,
+  ValidateIf,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export enum QuestionType {
   MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
   TRUE_FALSE = 'TRUE_FALSE',
   FILL_IN_BLANK = 'FILL_IN_BLANK',
-  SHORT_ANSWER = 'SHORT_ANSWER'
+  SHORT_ANSWER = 'SHORT_ANSWER',
 }
 
 export class QuizAnswerDto {
@@ -50,8 +64,12 @@ export class QuizQuestionDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => QuizAnswerDto)
-  @ArrayMinSize(2, { message: 'Multiple choice questions must have at least 2 answers' })
-  @ArrayMaxSize(6, { message: 'Multiple choice questions can have at most 6 answers' })
+  @ArrayMinSize(2, {
+    message: 'Multiple choice questions must have at least 2 answers',
+  })
+  @ArrayMaxSize(6, {
+    message: 'Multiple choice questions can have at most 6 answers',
+  })
   answers?: QuizAnswerDto[]; // Required only for MULTIPLE_CHOICE questions
 }
 

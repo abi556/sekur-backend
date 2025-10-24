@@ -7,6 +7,6 @@ import { QuizzesModule } from '../quizzes/quizzes.module';
   imports: [QuizzesModule],
   providers: [LessonsService],
   controllers: [LessonsController],
-  exports: [LessonsService]
+  exports: [LessonsService],
 })
 export class LessonsModule {}
