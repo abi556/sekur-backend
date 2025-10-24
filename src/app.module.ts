@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
@@ -13,16 +11,6 @@ import { AiModule } from './ai/ai.module';
 
 @Module({
   imports: [
-    // Global rate limiting: 100 requests per 60s per client
-    // Use forRootAsync for better serverless compatibility
-    ThrottlerModule.forRootAsync({
-      useFactory: () => [
-        {
-          ttl: 60_000,
-          limit: 100,
-        },
-      ],
-    }),
     UsersModule,
     PrismaModule,
     AuthModule,
@@ -32,10 +20,6 @@ import { AiModule } from './ai/ai.module';
     AiModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    // Apply throttling guard globally (can be overridden per-route with @Throttle)
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [AppService],
 })
 export class AppModule {}
