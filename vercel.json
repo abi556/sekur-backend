@@ -1,4 +1,5 @@
 {
+  "buildCommand": "node vercel-build.js",
   "rewrites": [
     {
       "source": "/(.*)",
